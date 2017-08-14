@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+        <script src="http://cdn.bootcss.com/jquery/1.8.1/jquery.min.js"></script>
+        <!-- <script type="text/javascript" src="canvasforIE/html5.js"></script> -->
+        <!--[if IE]><script type="text/javascript" src="canvasforIE/excanvas.js"></script><![endif]-->
+        <!-- <script type="text/javascript" src="canvasforIE/excanvas.js"></script> -->
+    </head>
+    <body>      
+        <canvas id="canvas" width="1024" height="768" style="border:1px solid #aaa;display:block;margin:50px auto;"></canvas>
+    </body>
+    <script>
+        var json = [
+            {"stepIndex":1,"nodeId":"流程专员发起",userInfo:[{'userName':'杨双红',isdo:'1'}],"nodemodel":"module14"},
+            {"stepIndex":2,"nodeId":"文档负责人确认",userInfo:[{'userName':'蔡亚军',isdo:'0'}],"nodemodel":"module14"}
+        ]
+ 
+        $(document).ready(function(){
+            var canvas=document.getElementById("canvas");
+            var context=canvas.getContext("2d");
+            var LINE_ARR = [
+                {startX:60,startY:180,endX:160,endY:190},
+                {startX:210,startY:180,endX:310,endY:190},
+                {startX:360,startY:180,endX:460,endY:190},
+                {startX:480,startY:60,endX:490,endY:160},
+                {startX:510,startY:180,endX:610,endY:190}
+            ];
+            for(var i=0;i<LINE_ARR.length;i++){
+                var pre = findJsonObj(i);
+                var curt = findJsonObj(i+1);
+                var aft = findJsonObj(i+2);
+                var alertStr = '';
+                if(curt){
+                    if(curt.userInfo.length > 0){
+                        alertStr += ('current '+curt.userInfo[0].userName);
+                    }
+                }
+                if(pre){
+                    if(pre.userInfo.length > 0){
+                        alertStr += (' from ' + pre.userInfo[0].userName);
+                    }
+                } 
+                if(aft){
+                    if(aft.userInfo.length > 0){
+                        alertStr += (' to '+aft.userInfo[0].userName);
+                    }
+                }
+                LINE_ARR[i].alertInfo = alertStr;
+            }
+
+            function findJsonObj(id){
+                for(var i=0;i<json.length;i++){
+                    if(json[i].stepIndex == id+1){
+                        return json[i];
+                    }
+                }
+            }
+            for(var i=0;i<json.length;i++){
+                var obj = json[i];
+                if(LINE_ARR[obj.stepIndex-1]){
+                    if(obj.userInfo[0].isdo == '1'){
+                        LINE_ARR[obj.stepIndex-1].color = '#6B8E23';
+                    } else {
+                        LINE_ARR[obj.stepIndex-1].color = '#FF0000';
+                    }
+                }    
+            }
+            $('#canvas').click(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+
+                for(var i=0;i<LINE_ARR.length;i++){
+                    if(mouseX > LINE_ARR[i].startX && mouseX<LINE_ARR[i].endX && mouseY > LINE_ARR[i].startY && mouseY < LINE_ARR[i].endY){
+                        alert(LINE_ARR[i].alertInfo);
+                        // console.log(LINE_ARR[i].alertStr);
+                        return;
+                    } else {
+                        
+                    }
+                }
+            });
+
+            $('#canvas').mousemove(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+                var showCursor = false;;
+                for(var i=0;i<LINE_ARR.length;i++){
+                    if(mouseX > LINE_ARR[i].startX && mouseX<LINE_ARR[i].endX && mouseY > LINE_ARR[i].startY && mouseY < LINE_ARR[i].endY){
+                        showCursor = true;
+                    } 
+                }
+                if(showCursor){
+                    $("#canvas").css({cursor:'pointer'})
+                } else {
+                    $("#canvas").css({cursor:''})
+                }
+
+            })
+
+            function drawNode(posX,posY,imgSrc,titleArr){
+                var img = new Image();
+                img.onload = function(){
+                    context.drawImage(img,posX,posY,50,50);
+                    context.restore();
+                }
+                img.src = imgSrc;
+                for(var i=0;i<titleArr.length;i++){
+                    context.font="12px arial";
+                    context.fillStyle="#333";
+                    context.textAlign="center";
+                    context.textBaseline = "middle";
+                    context.fillText(titleArr[i],posX+25,posY+55+12*i);
+                    context.restore();
+                }
+            }
+
+            function drawLine(startX,startY,endX,endY,color,arrow){
+                var strokeColor = color ? color : '#AAAAAA'
+                context.strokeStyle  = strokeColor;
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(startX,startY);
+                context.lineTo(endX,endY);
+                context.stroke();
+                context.closePath();
+                context.restore();
+
+                drawTriangle(startX,startY,endX,endY,arrow);
+            }
+
+            function drawTriangle(startX,startY,endX,endY,arrow){
+                var posX,posY,angle;
+                angle = Math.atan((endY - startY)/(endX - startX));
+                var arr = arrow.split('');
+                for(var i = 0;i<arr.length;i++){
+                    if(arr[i] == 'L'){
+                        draw(startX,startY-7.5,'imgs/triangle_left.png');
+                    } else if(arr[i] == 'R'){
+                        draw(endX-14,endY-7.5,'imgs/triangle_right.png');
+                    } else if(arr[i] == 'T'){
+                        draw(startX-6,startY-6,'imgs/triangle_top.png');
+                    } else if(arr[i] == 'B'){
+                        draw(endX-6,endY-10,'imgs/triangle_bottom.png');
+                    }
+                }
+
+                function draw(posX,posY,src,angle){
+                    var img = new Image();
+                    img.onload = function(){
+                        context.save();
+                        context.drawImage(img,posX-4 ,posY,20,15);
+                        context.restore();
+                    }
+                    img.src = src;
+                }
+            }
+
+            drawLine(60,185,160,185,LINE_ARR[0].color,'R');
+            drawLine(210,185,310,185,LINE_ARR[1].color,'LR');
+            drawLine(360,185,460,185,LINE_ARR[2].color,'LR');
+            drawLine(485,60,485,160,LINE_ARR[3].color,'TB');
+            drawLine(510,185,610,185,LINE_ARR[4].color,'R');
+
+            drawNode(10,160,'imgs/app_start.png',[]);
+            drawNode(160,160,'imgs/app_light_baseMode5.png',['流程专员','发起(1)']);
+            drawNode(310,160,'imgs/app_light_baseMode5.png',['文档负责','人确认(3)']);
+            drawNode(460,160,'imgs/app_baseMode5.png',['返回流程','专员(5)']);
+            drawNode(460,10,'imgs/app_baseMode5.png',['会签(7)']);
+            drawNode(610,160,'imgs/app_end.png',[]);
+        })
+    </script>
+</html>

@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+        <script src="http://cdn.bootcss.com/jquery/1.8.1/jquery.min.js"></script>
+        <!-- <script type="text/javascript" src="canvasforIE/html5.js"></script> -->
+        <!--[if IE]><script type="text/javascript" src="canvasforIE/excanvas.js"></script><![endif]-->
+        <!-- <script type="text/javascript" src="canvasforIE/excanvas.js"></script> -->
+        <script type="text/javascript" src="json.js"></script>
+    </head>
+    <body>
+        <canvas id="canvas" width="1088" height="1088" style="display:block;margin:50px auto;"></canvas>
+    </body>
+    <script>
+        var nodeInfoArr = json.flow.flow_seq;
+        var lineInfoArr = json.flow.flow_line;
+        var canvas,context;
+        var lineClickRangeArr = [];
+        $(document).ready(function(){
+            canvas=document.getElementById("canvas");
+            context=canvas.getContext("2d");
+
+            for(var i=0;i<jsonData.length;i++){
+                var item = getNodeById(jsonData[i].fromNodeId);
+                if(item){
+                    jsonData[i].fromModeModule = item.id;
+                }
+            }
+
+            for(var i=0;i<nodeInfoArr.length;i++){
+                var item = nodeInfoArr[i];
+                console.log(item.id,jsonData[jsonData.length-1].nodemodel);
+                if(item.id == jsonData[jsonData.length-1].nodemodel){
+                    drawShineNode(item.top,item.left,item.width,item.height,item.nodetype,item.node_name);
+                } else {
+                    drawNode(item.top,item.left,item.width,item.height,item.nodetype,item.node_name,checkIsGrayNode(item));
+                }
+            }
+
+            function checkIsGrayNode(item){
+                for(var i=0;i<jsonData.length;i++){
+                    if(jsonData[i].fromModeModule == item.id){
+                        return false;
+                    }
+                    if(jsonData[i].nodemodel == item.id){
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            for(var i=0;i<lineInfoArr.length;i++){
+                var item = lineInfoArr[i];
+                var startNode = findNode(item.wBaseMode);
+                var endNode = findNode(item.xBaseMode);
+                lineClickRangeArr.push(null);
+                if(startNode && endNode){
+                    var lineInfo = findLineInfo(item.wBaseMode,item.xBaseMode);
+                    var linePosInfo = getLinePosInfoArr(startNode,endNode,lineInfo);
+                    
+                    item.lineInfo = lineInfo;
+                    if(lineInfo.length > 0){
+
+                    }
+                    lineClickRangeArr[i] = getClickRange(linePosInfo[0],linePosInfo[1],linePosInfo[2],linePosInfo[3]);
+                    drawLine(linePosInfo[0],linePosInfo[1],linePosInfo[2],linePosInfo[3],linePosInfo[4],linePosInfo[5],lineInfo);
+                }
+            }
+
+            $('#canvas').click(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+                for(var i=0;i<lineClickRangeArr.length;i++){
+                    var rangeItem = lineClickRangeArr[i];
+                    var info = lineInfoArr[i];
+                    if(rangeItem && info.lineInfo.length > 0){
+                        if(mouseX > rangeItem[0] && mouseX<rangeItem[2] && mouseY > rangeItem[1] && mouseY < rangeItem[3]){
+                            alert(JSON.stringify(info.lineInfo));
+                            return;
+                        } 
+                    }
+                }
+            });
+
+            $('#canvas').mousemove(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+                var showCursor = false;;
+                for(var i=0;i<lineClickRangeArr.length;i++){
+                    var rangeItem = lineClickRangeArr[i];
+                    var info = lineInfoArr[i];
+                    if(rangeItem && info.lineInfo.length > 0){
+                        if(mouseX > rangeItem[0] && mouseX<rangeItem[2] && mouseY > rangeItem[1] && mouseY < rangeItem[3]){
+                            showCursor = true;
+                            break;
+                        } 
+                    }
+                }
+                if(showCursor){
+                    $("#canvas").css({cursor:'pointer'})
+                } else {
+                    $("#canvas").css({cursor:''})
+                }
+
+            })
+        })
+
+        function getLinePosInfoArr(startNode,endNode,lineInfos){//获取线条的位置信息
+            if(Math.abs(Number(startNode.left)-Number(endNode.left)) < Math.abs(Number(startNode.top) - Number(endNode.top))){
+                var topItem = (Number(startNode.top) > Number(endNode.top) ? startNode : endNode);
+                var bottomItem = (startNode == topItem ? endNode : startNode);
+                var widthArr = [];
+                var tisdo=-1;
+                for(var i=0;i<lineInfos.length;i++){
+                    var fromId = lineInfos[i].fromModeModule;
+                    var toId = lineInfos[i].nodemodel;
+                    var isdo = lineInfos[i].userInfo[0].isdo;
+                    if(topItem.id == toId){
+                        if(getIndexOf(widthArr,'t') < 0){
+                            widthArr.push('t');
+                        }
+                    } else if(bottomItem.id == toId){
+                        if(getIndexOf(widthArr,'b') < 0){
+                            widthArr.push('b');
+                        }
+                    }
+                    if(tisdo != '1'){
+                        tisdo = isdo;
+                    }
+                }
+                return [Number(topItem.left)+25,Number(topItem.top),Number(bottomItem.left)+25,Number(bottomItem.top)+50,widthArr,tisdo];
+            } else {
+                var leftItem = (Number(startNode.left) < Number(endNode.left) ? startNode : endNode);
+                var rightItem = (leftItem == startNode ? endNode : startNode);
+                var widthArr = [];
+                lineInfos[i]
+                for(var i=0;i<lineInfos.length;i++){
+                    var fromId = lineInfos[i].fromModeModule;
+                    var toId = lineInfos[i].nodemodel;
+                    var isdo = lineInfos[i].userInfo[0].isdo;
+                    if(leftItem.id == toId){
+                        if(getIndexOf(widthArr,'l')<0){
+                            widthArr.push('l');
+                        }
+                    } else if(rightItem.id == toId){
+                        if(getIndexOf(widthArr,'r')<0){
+                            widthArr.push('r');
+                        }
+                    }
+                    if(tisdo != '1'){
+                        tisdo = isdo;
+                    }
+                }
+                return [Number(leftItem.left)+50,Number(leftItem.top)+25,Number(rightItem.left),Number(rightItem.top)+25,widthArr,isdo];
+            }
+
+            function getIndexOf(arr,item){
+                for(var i=0;i<arr.length;i++){
+                    if(arr[i] == item){
+                        return i;
+                    }
+                }
+                return -1;
+            }
+        }
+
+        function getTrianglePosInfo(startX,startY,endX,endY){//获取箭头的类型及位置信息
+            if(Math.abs(Number(startX)-Number(endX)) > Math.abs(Number(startY)-Number(endY))){
+                var left = startX < endX ? [startX-2,startY-3.5] : [endX-2,endY-3.5];
+                var right = startX < endX ? [endX-8,endY-3.5] : [startX-8,startY-3.5];
+                return {left:left,right:right};
+            } else {
+                var top = startY < endY ? [startX-6,startY-2] : [endX-6,endY-2];
+                var bottom = startY < endY ? [endX-4,endY-5] : [startX-4,startY-5];
+                return {top:top,bottom:bottom};
+            }
+        }
+
+        function drawLine(startX,startY,endX,endY,arrow,isdo,lineInfo){//画线
+            context.restore();
+            var strokeColor = getColor(isdo);
+            context.strokeStyle  = strokeColor;
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(startX,startY);
+            context.lineTo((startX+endX)/2,startY);
+            context.lineTo((startX+endX)/2,endY);
+            context.lineTo(endX,endY);
+            context.stroke();
+            context.closePath();
+            context.restore();
+            
+            drawTriangle(startX,startY,endX,endY,arrow);
+            if(lineInfo.length > 0){
+                var lineInfoNum = lineInfo.length;
+                var tx,ty;
+                if(lineInfoNum > 1){
+                    if(Math.abs(startX-endX) > Math.abs(startY-endY)){
+                        ty = (startY < endY ? startY : endY) - 10;
+                        tx = (startX + endX)/2; 
+                    } else {
+                        tx = (startX < endX ? endX : startX) + 10;
+                        ty = (startY + endY)/2; 
+                    }
+                    context.save();
+                    context.font="12px Georgia";
+                    context.fillStyle="#333";
+                    context.textAlign="center";
+                    context.textBaseline = "middle";
+                    context.fillText(lineInfoNum,tx,ty);
+                    context.restore();
+                }
+            }
+
+            function getColor(isdo){                
+                if(isdo == '0'){
+                    return '#FF0000'
+                }
+
+                if(isdo == '1'){
+                    return '#FF0000'
+                }
+                return '#AAAAAA';
+            }
+        }
+
+
+        function drawTriangle(startX,startY,endX,endY,arrow){//画箭头
+            var trianglePosInfo = getTrianglePosInfo(startX,startY,endX,endY);
+            for(var i=0;i<arrow.length;i++){
+                if(arrow[i] == 'r' && trianglePosInfo.right){
+                    loadTriangle(trianglePosInfo.right[0],trianglePosInfo.right[1],'imgs/triangle_right.png');
+                } else if(arrow[i] == 'l' && trianglePosInfo.left){
+                    loadTriangle(trianglePosInfo.left[0],trianglePosInfo.left[1],'imgs/triangle_left.png');
+                } else if(arrow[i] == 't' && trianglePosInfo.top){
+                    loadTriangle(trianglePosInfo.top[0],trianglePosInfo.top[1],'imgs/triangle_top.png');
+                } else if(arrow[i] == 'b' && trianglePosInfo.bottom){
+                    loadTriangle(trianglePosInfo.bottom[0],trianglePosInfo.bottom[1],'imgs/triangle_bottom.png');
+                }
+            }
+            if(arrow.length == 0){
+                if(trianglePosInfo.right){
+                    loadTriangle(trianglePosInfo.right[0],trianglePosInfo.right[1],'imgs/triangle_right_gray.png');
+                }
+                if(trianglePosInfo.left){
+                    loadTriangle(trianglePosInfo.left[0],trianglePosInfo.left[1],'imgs/triangle_left_gray.png');
+                }
+                if(trianglePosInfo.top){
+                    loadTriangle(trianglePosInfo.top[0],trianglePosInfo.top[1],'imgs/triangle_top_gray.png');
+                }
+                if(trianglePosInfo.bottom){
+                    loadTriangle(trianglePosInfo.bottom[0],trianglePosInfo.bottom[1],'imgs/triangle_bottom_gray.png');
+                }
+            }
+            function loadTriangle(x,y,src){
+                var img = new Image();
+                img.onload = function(){
+                    context.drawImage(img,x,y,10,7);
+                    context.restore();
+                }
+                img.src = src;
+            }
+        }
+
+        function getClickRange(startX,startY,endX,endY){//设置线条的点击范围
+            var tstartX = startX < endX ? startX : endX;
+            var tendX = startX < endX ? endX : startX;
+            var tstartY = startY < endY ? startY : endY;
+            var tendY = startY < endY ? endY : startY;
+            if(Math.abs(Number(tstartX)-Number(tendX)) < Math.abs(Number(tstartY)-Number(tendY))){
+                var dis = Math.abs(Number(tstartX)-Number(tendX));
+                dis = dis < 10 ? (10-dis) : 0;
+                tstartX = tstartX - dis/2;
+                tendX = tendX + dis/2;
+                return [tstartX,tstartY,tendX,tendY]
+            } else {
+                var dis = Math.abs(Number(startY)-Number(endY));
+                dis = dis<10 ? (10-dis):0;
+                tstartY = tstartY - dis/2;
+                tendY = tendY + dis/2;
+                return [tstartX,tstartY,tendX,tendY];
+            }
+        }
+
+        function findNode(id){//根据id查找节点
+            for(var i=0;i<nodeInfoArr.length;i++){
+                if(nodeInfoArr[i].id == id){
+                    return nodeInfoArr[i];
+                }
+            }
+            return null;
+        }
+
+        function getNodeById(id){
+            for(var i=0;i<nodeInfoArr.length;i++){
+                if(nodeInfoArr[i].node_id == id){
+                    return nodeInfoArr[i];
+                }
+            }
+            return null;
+        }
+
+        function findLineInfo(node1,node2){
+            var arr = [];
+            for(var i=0;i<jsonData.length;i++){
+                var item = jsonData[i];
+                if((item.fromModeModule == node1 && item.nodemodel == node2) ||(item.fromModeModule == node2 && item.nodemodel == node1)){
+                    arr.push(item);
+                }
+            }
+            return arr;
+        }
+
+        function drawNode(top,left,width,height,type,name,isgray){//画节点
+            var img = new Image();
+            img.onload = function(){
+                context.drawImage(img,left,top,width,height);
+                context.restore();
+            }
+            var src = '';
+            if(type == 'end'){
+                if(isgray){
+                    src = 'imgs/app_end-gray.png';
+                } else {
+                    src = 'imgs/app_end.png'
+                }
+            } else if(type == 'start'){
+                src = 'imgs/app_start.png';
+            } else {
+                if(isgray){
+                    src = 'imgs/app_baseMode5-gray.png'
+                } else {
+                    src = 'imgs/app_baseMode5.png'
+                }
+            }
+            img.src = src;
+            if(name){
+                context.font="12px Georgia";
+                context.fillStyle="#333";
+                context.textAlign="center";
+                context.textBaseline = "middle";
+                context.fillText(name,Number(left)+25,Number(top)+55);
+            }
+        }
+
+        function drawShineNode(top,left,width,height,type,name){
+            var showShadow = true;
+            var img = null;
+            setInterval(draw,300);
+
+            function draw(){
+                if(!img){
+                    img = new Image();
+                    img.onload = function(){
+                        context.drawImage(img,left,top,width,height);
+                        context.restore();
+                    }
+                    img.src = type == 'end' ? 'imgs/app_end.png' : (type == 'start' ? 'imgs/app_start.png' : 'imgs/app_baseMode5.png');
+                } else {
+                    context.drawImage(img,left,top,width,height);
+                    context.restore();
+                }
+                if(showShadow){
+                    var tLeft = Number(left);
+                    var tTop = Number(top);
+                    context.restore();
+                    context.beginPath();
+                    context.moveTo(tLeft+6,tTop+6);
+                    context.lineTo(tLeft+44,tTop+6);
+                    context.lineTo(tLeft+44,tTop+44);
+                    context.lineTo(tLeft+6,tTop+44);
+                    context.lineTo(tLeft+6,tTop+6);
+                    context.closePath();
+                    context.strokeStyle = '#FF0000';
+                    context.lineWidth = 3;
+                    context.stroke();
+                    context.restore();
+                }
+
+                showShadow = !showShadow;
+            }
+
+            if(name){
+                context.font="12px Georgia";
+                context.fillStyle="#333";
+                context.textAlign="center";
+                context.textBaseline = "middle";
+                context.fillText(name,Number(left)+25,Number(top)+55);
+            }
+        }
+    </script>
+</html>

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title></title>
+        <meta charset="UTF-8">
+        <!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+        <script src="http://cdn.bootcss.com/jquery/1.8.1/jquery.min.js"></script>
+        <!-- <script type="text/javascript" src="canvasforIE/html5.js"></script> -->
+        <!--[if IE]><script type="text/javascript" src="canvasforIE/excanvas.js"></script><![endif]-->
+        <!-- <script type="text/javascript" src="canvasforIE/excanvas.js"></script> -->
+    </head>
+    <body>      
+        <canvas id="canvas" width="1024" height="768" style="display:block;margin:50px auto;"></canvas>
+    </body>
+    <script>
+        var json = [
+            {"stepIndex":1,"nodeId":"流程专员发起",userInfo:[{'userName':'杨双红',isdo:'1'}],"nodemodel":"module14"},
+            {"stepIndex":2,"nodeId":"文档负责人确认",userInfo:[{'userName':'蔡亚军',isdo:'0'}],"nodemodel":"module14"}
+        ]
+
+        var json2 = [
+            {'from':0,to:1,fromName:'小王',toName:'小李',strarttime:'12:30',endtime:'12:30'},
+            {'from':1,to:0,fromName:'小张',toName:'王五',strarttime:'12:30',endtime:'12:30'},
+            {'from':1,to:2,fromName:'赵六',toName:'小张',strarttime:'12:30',endtime:'12:30'},
+            {'from':2,to:1,fromName:'小王',toName:'小李',strarttime:'12:30',endtime:'12:30'},
+            {'from':2,to:3,fromName:'小王',toName:'小李',strarttime:'12:30',endtime:'12:30'}
+        ]
+
+        var LINE_ARR = [
+            {startX:60,startY:180,endX:160,endY:190},
+            {startX:210,startY:180,endX:310,endY:190},
+            {startX:360,startY:180,endX:460,endY:190},
+            {startX:480,startY:60,endX:490,endY:160},
+            {startX:510,startY:180,endX:610,endY:190}
+        ];
+
+        function generateData(){
+            for(var i=0;i<LINE_ARR.length;i++){
+                var id = i;
+                var arr = [];
+                for(var j=0;j<json2.length;j++){
+                    if(json2[j].from == i && json2[j].to == i+1 || json2[j].from == i+1 && json2[j].to == i){
+                        arr.push(json2[j]);
+                    }
+                }
+                LINE_ARR[i].nodes = arr;
+            }
+        }
+        generateData();
+ 
+        $(document).ready(function(){
+            var canvas=document.getElementById("canvas");
+            var context=canvas.getContext("2d");
+            
+            for(var i=0;i<LINE_ARR.length;i++){
+                var pre = findJsonObj(i);
+                var curt = findJsonObj(i+1);
+                var aft = findJsonObj(i+2);
+                var alertStr = '';
+                if(curt){
+                    if(curt.userInfo.length > 0){
+                        alertStr += ('current '+curt.userInfo[0].userName);
+                    }
+                }
+                if(pre){
+                    if(pre.userInfo.length > 0){
+                        alertStr += (' from ' + pre.userInfo[0].userName);
+                    }
+                } 
+                if(aft){
+                    if(aft.userInfo.length > 0){
+                        alertStr += (' to '+aft.userInfo[0].userName);
+                    }
+                }
+                LINE_ARR[i].alertInfo = alertStr;
+            }
+
+            for(var i=0;i<LINE_ARR.length;i++){
+                if(LINE_ARR[i].nodes &&  LINE_ARR[i].nodes.length > 0){
+                    if(LINE_ARR[i].nodes.length == 1){
+                        // text,style,font,posX,posY
+                        drawTextNode(LINE_ARR[i].nodes[0].strarttime,'#333',"12px arial",LINE_ARR[i].startX+80,LINE_ARR[i].startY-10)
+                        drawTextNode(LINE_ARR[i].nodes[0].endtime,'#333',"12px arial",LINE_ARR[i].endX-80,LINE_ARR[i].startY-10)                        
+                    } else {
+                        drawTextNode(LINE_ARR[i].nodes.length,'#333',"12px arial",(LINE_ARR[i].startX+LINE_ARR[i].endX)/2,LINE_ARR[i].startY-10)
+                    }
+                }
+            }
+
+            var item = json2[json2.length-1];
+            var nodeId = item.to;
+
+
+
+            function findJsonObj(id){
+                for(var i=0;i<json.length;i++){
+                    if(json[i].stepIndex == id+1){
+                        return json[i];
+                    }
+                }
+            }
+            for(var i=0;i<json.length;i++){
+                var obj = json[i];
+                if(LINE_ARR[obj.stepIndex-1]){
+                    if(obj.userInfo[0].isdo == '1'){
+                        LINE_ARR[obj.stepIndex-1].color = '#A7C16C';
+                    } else {
+                        LINE_ARR[obj.stepIndex-1].color = '#FF0000';
+                    }
+                }    
+            }
+            $('#canvas').click(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+
+                for(var i=0;i<LINE_ARR.length;i++){
+                    if(mouseX > LINE_ARR[i].startX && mouseX<LINE_ARR[i].endX && mouseY > LINE_ARR[i].startY && mouseY < LINE_ARR[i].endY){
+                        alert(LINE_ARR[i].alertInfo);
+                        // console.log(LINE_ARR[i].alertStr);
+                        return;
+                    } else {
+                        
+                    }
+                }
+            });
+
+            $('#canvas').mousemove(function(e){
+                var mouseX = e.offsetX;
+                var mouseY = e.offsetY;
+                var showCursor = false;;
+                for(var i=0;i<LINE_ARR.length;i++){
+                    if(mouseX > LINE_ARR[i].startX && mouseX<LINE_ARR[i].endX && mouseY > LINE_ARR[i].startY && mouseY < LINE_ARR[i].endY){
+                        showCursor = true;
+                    } 
+                }
+                if(showCursor){
+                    $("#canvas").css({cursor:'pointer'})
+                } else {
+                    $("#canvas").css({cursor:''})
+                }
+
+            })
+
+            // drawShine(310,160);
+
+            // function drawShine(posX,posY){
+            //     var show = true;
+            //     setInterval(showShine,300);
+
+            //     function showShine(){
+            //         context.restore();
+            //         context.beginPath();
+            //         context.shadowBlur = 20;
+            //         context.shadowColor='red';
+            //         context.moveTo(posX,posY);
+            //         context.lineTo(posX+50,posY);
+            //         context.lineTo(posX+50,posY+50);
+            //         context.lineTo(posX,posY+50);
+            //         context.lineTo(posX,posY);
+            //         context.strokeStyle = show ? '#FFFFFF' : 'red';
+            //         context.lineWidth = 2;
+            //         context.stroke();
+            //         context.restore();
+            //     }
+                
+            // }
+
+            function drawNode(posX,posY,imgSrc,titleArr){
+                console.log(posX,posY);
+                var img = null;
+                var showShadow = false;
+                if(posX == 160){
+                    setInterval(draw,300);
+                } else {
+                    draw();
+                }
+
+
+                function draw(){
+                    context.save();
+                    context.restore();
+                    // context.clearRect(posX+5,posY+5,40,40);
+                    if(!img){
+                        img = new Image();
+                        img.onload = function(){
+                            context.drawImage(img,posX,posY,50,50);
+                            context.restore();
+                        }
+                        img.src = imgSrc;
+                    }
+                    else {
+                        context.drawImage(img,posX,posY,50,50);
+                        context.restore();
+                    }
+                    if(showShadow){
+                        context.restore();
+                        context.beginPath();
+                        context.moveTo(posX+6,posY+6);
+                        context.lineTo(posX+44,posY+6);
+                        context.lineTo(posX+44,posY+44);
+                        context.lineTo(posX+6,posY+44);
+                        context.lineTo(posX+6,posY+6);
+                        context.strokeStyle = 'red';
+                        context.lineWidth = 2;
+                        context.stroke();
+                        context.restore();
+                    }
+
+                    showShadow = !showShadow;
+                }
+                for(var i=0;i<titleArr.length;i++){
+                        context.shadowBlur = 0;
+                        context.font="12px arial";
+                        context.fillStyle="#333";
+                        context.textAlign="center";
+                        context.textBaseline = "middle";
+                        context.fillText(titleArr[i],posX+25,posY+55+12*i);
+                        context.restore();
+                    }
+                // var img = new Image();
+                // img.onload = function(){
+                //     context.drawImage(img,posX,posY,50,50);
+                //     context.restore();
+                // }
+                // img.src = imgSrc;
+                // for(var i=0;i<titleArr.length;i++){
+                //     context.shadowBlur = 0;
+                //     context.font="12px arial";
+                //     context.fillStyle="#333";
+                //     context.textAlign="center";
+                //     context.textBaseline = "middle";
+                //     context.fillText(titleArr[i],posX+25,posY+55+12*i);
+                //     context.restore();
+                // }
+            }
+
+            function drawTextNode(text,style,font,posX,posY){
+                context.restore();
+                context.shadowBlur = 0;
+                context.font = font;
+                context.fillStyle = style;
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(text,posX,posY);
+                context.restore();
+            }
+
+            function drawLine(startX,startY,endX,endY,color,arrow){
+                var strokeColor = color ? color : '#AAAAAA'
+                context.strokeStyle  = strokeColor;
+                context.shadowBlur = 0;
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(startX,startY);
+                context.lineTo(endX,endY);
+                context.stroke();
+                context.closePath();
+                context.restore();
+
+                drawTriangle(startX,startY,endX,endY,arrow);
+            }
+
+            function drawTriangle(startX,startY,endX,endY,arrow){
+                var posX,posY,angle;
+                angle = Math.atan((endY - startY)/(endX - startX));
+                var arr = arrow.split('');
+                for(var i = 0;i<arr.length;i++){
+                    if(arr[i] == 'L'){
+                        draw(startX+3,startY-3.5,'imgs/triangle_left.png');
+                    } else if(arr[i] == 'R'){
+                        draw(endX-3,endY-3.5,'imgs/triangle_right.png');
+                    } else if(arr[i] == 'T'){
+                        draw(startX,startY,'imgs/triangle_top.png');
+                    } else if(arr[i] == 'B'){
+                        draw(endX-1,endY-3,'imgs/triangle_bottom.png');
+                    }
+                }
+
+                function draw(posX,posY,src,angle){
+                    var img = new Image();
+                    img.onload = function(){
+                        context.save();
+                        context.drawImage(img,posX-4 ,posY,10,7);
+                        context.restore();
+                    }
+                    img.src = src;
+                }
+            }
+
+            drawLine(60,185,160,185,LINE_ARR[0].color,'R');
+            drawLine(210,185,310,185,LINE_ARR[1].color,'LR');
+            drawLine(360,185,460,185,LINE_ARR[2].color,'LR');
+            drawLine(485,60,485,160,LINE_ARR[3].color,'TB');
+            drawLine(510,185,610,185,LINE_ARR[4].color,'R');
+
+            drawNode(10,160,'imgs/app_start.png',[]);
+            drawNode(160,160,'imgs/app_baseMode5.png',['流程专员','发起(1)']);
+            drawNode(310,160,'imgs/app_baseMode5.png',['文档负责','人确认(3)']);
+            drawNode(460,160,'imgs/app_baseMode5-gray.png',['返回流程','专员(5)']);
+            drawNode(460,10,'imgs/app_baseMode5-gray.png',['会签(7)']);
+            drawNode(610,160,'imgs/app_end-gray.png',[]);
+        })
+
+    </script>
+</html>
