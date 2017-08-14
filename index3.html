@@ -172,21 +172,31 @@
                 var right = startX < endX ? [endX-8,endY-3.5] : [startX-8,startY-3.5];
                 return {left:left,right:right};
             } else {
-                var top = startY < endY ? [startX-6,startY-2] : [endX-6,endY-2];
-                var bottom = startY < endY ? [endX-4,endY-5] : [startX-4,startY-5];
+                var top = startY < endY ? [startX-5,startY-3] : [endX-5,endY-3];
+                var bottom = startY < endY ? [endX-5,endY-3] : [startX-5,startY-3];
                 return {top:top,bottom:bottom};
             }
         }
 
         function drawLine(startX,startY,endX,endY,arrow,isdo,lineInfo){//画线
+
+            console.log(startX,startY,endX,endY);
             context.restore();
-            var strokeColor = getColor(isdo);
+            var strokeColor = getColor(lineInfo);
             context.strokeStyle  = strokeColor;
             context.lineWidth = 2;
             context.beginPath();
+
+            
+
             context.moveTo(startX,startY);
-            context.lineTo((startX+endX)/2,startY);
-            context.lineTo((startX+endX)/2,endY);
+            if(Math.abs(startX-endX) > Math.abs(startY-endY)){
+                context.lineTo((startX+endX)/2,startY);
+                context.lineTo((startX+endX)/2,endY);
+            } else {
+                context.lineTo(startX,(startY+endY)/2);
+                context.lineTo(endX,(startY+endY)/2);
+            }
             context.lineTo(endX,endY);
             context.stroke();
             context.closePath();
@@ -214,14 +224,18 @@
                 }
             }
 
-            function getColor(isdo){                
-                if(isdo == '0'){
+            function getColor(lineInfo){     
+                console.log(lineInfo);    
+                if(lineInfo.length > 0){
                     return '#FF0000'
-                }
+                }       
+                // if(isdo == '0'){
+                //     return '#FF0000'
+                // }
 
-                if(isdo == '1'){
-                    return '#FF0000'
-                }
+                // if(isdo == '1'){
+                //     return '#FF0000'
+                // }
                 return '#AAAAAA';
             }
         }
@@ -336,13 +350,13 @@
                 }
             }
             img.src = src;
-            if(name){
+            /*if(name){
                 context.font="12px Georgia";
                 context.fillStyle="#333";
                 context.textAlign="center";
                 context.textBaseline = "middle";
                 context.fillText(name,Number(left)+25,Number(top)+55);
-            }
+            }*/
         }
 
         function drawShineNode(top,left,width,height,type,name){
