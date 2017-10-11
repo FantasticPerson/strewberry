@@ -357,12 +357,12 @@
                     var toId = lineInfos[i].nodemodel;
                     var isdo = lineInfos[i].userInfo[0].isdo;
                     if(topItem.id == toId){
-                        if(getIndexOf(widthArr,'t') < 0){
-                            widthArr.push('t');
-                        }
-                    } else if(bottomItem.id == toId){
                         if(getIndexOf(widthArr,'b') < 0){
                             widthArr.push('b');
+                        }
+                    } else if(bottomItem.id == toId){
+                        if(getIndexOf(widthArr,'t') < 0){
+                            widthArr.push('t');
                         }
                     }
                     if(tisdo != '1'){
@@ -391,12 +391,12 @@
                     var toId = lineInfos[i].nodemodel;
                     var isdo = lineInfos[i].userInfo[0].isdo;
                     if(leftItem.id == toId){
-                        if(getIndexOf(widthArr,'r')<0){
-                            widthArr.push('r');
-                        }
-                    } else if(rightItem.id == toId){
                         if(getIndexOf(widthArr,'l')<0){
                             widthArr.push('l');
+                        }
+                    } else if(rightItem.id == toId){
+                        if(getIndexOf(widthArr,'r')<0){
+                            widthArr.push('r');
                         }
                     }
                     if(tisdo != '1'){
