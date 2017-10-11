@@ -246,7 +246,8 @@
         var lineInfoArr = json.flow.flow_line;
 		var canvas,context;
         var lineClickRangeArr = [];
-		console.log(jsonData);
+		var lineParaArr = [];
+		//console.log(jsonData);
         $(document).ready(function(){
             canvas=document.getElementById("canvas");
             context=canvas.getContext("2d");
@@ -371,12 +372,12 @@
                 }
 				if(lineInfos.length == 0){
 					if(topItem == startNode){
-						if(getIndexOf(widthArr,'t')<0){
-                            widthArr.push('t');
-                        }
-					} else {
 						if(getIndexOf(widthArr,'b')<0){
                             widthArr.push('b');
+                        }
+					} else {
+						if(getIndexOf(widthArr,'t')<0){
+                            widthArr.push('t');
                         }
 					}
 				}
@@ -440,26 +441,113 @@
                 return {top:top,bottom:bottom};
             }
         }
+		
+		
+		function checkIsOcpied(tempParaArr){
+            for(var i=0;i<tempParaArr.length;i++){
+                var startX1 = tempParaArr[i].startPoint.x;
+                var endX1 = tempParaArr[i].endPoint.x;
+                var startY1 = tempParaArr[i].startPoint.y;
+                var endY1 = tempParaArr[i].endPoint.y;
+
+                for(var j=0;j<lineParaArr.length;j++){
+                    var startX2 = lineParaArr[j].startPoint.x;
+                    var endX2 = lineParaArr[j].endPoint.x;
+                    var startY2 = lineParaArr[j].startPoint.y;
+                    var endY2 = lineParaArr[j].endPoint.y; 
+
+                   if(startX1 == startX2 &&  startX1 == endX1 && startX1 == endX2){
+                        if((startY1 > startY2 && startY1 < endY2) 
+                            || (startY1 > endY2 && startY1 < startY2)
+                            || (endY1 > startY2 && endY1 < endX2) 
+                            || (endY1 > endY2 && endY1 < startY2)){
+                            return true;
+                        }
+                    } else if(startY1 == startY2 && startY1 == endY1 && startY1 == endY2){
+                        if((startX1 > startX2 && startX1 < endX2)
+                            || (startX1 > endX2 && startX1 < startX2)
+                            || (endX1 > startX2 && endX1 < endX2)
+                            || (endX1 > endX2 && endX1 < startX2)){
+                                return true;
+                            }
+
+                    }
+                }
+            }
+            return false;
+        }
 
         function drawLine(startX,startY,endX,endY,arrow,isdo,lineInfo){//画线
             context.restore();
             var strokeColor = getColor(lineInfo);
             context.strokeStyle  = strokeColor;
             context.lineWidth = 2;
-            context.beginPath();
-            context.moveTo(startX,startY);
+            var tempParaArr = [];
             //if(Math.abs(startX-endX) > Math.abs(startY - endY)){
 			if(arrow.indexOf('r') >= 0 || arrow.indexOf('l') >= 0){
+                tempParaArr.push({
+                    startPoint:{x:startX,y:startY},
+                    endPoint:{x:(startX+endX)/2,y:startY}
+                })
+                tempParaArr.push({
+                    startPoint:{x:(startX+endX)/2,y:startY},
+                    endPoint:{x:(startX+endX)/2,y:endY}
+                })
+                tempParaArr.push({
+                    startPoint:{x:(startX+endX)/2,y:endY},
+                    endPoint:{x:endX,y:endY}
+                })
+                var isOcupied = checkIsOcpied(tempParaArr);
+                console.log(isOcupied)
+                lineParaArr = lineParaArr.concat(tempParaArr);
+                if(isOcupied){
+                    if(strokeColor == "#AAAAAA"){
+                        strokeColor = "#666666"
+                    } else {
+                        strokeColor = "#FF0000"
+                    }
+                }
+                context.strokeStyle  = strokeColor;
+                context.beginPath();
+                context.moveTo(startX,startY);
             	context.lineTo((startX+endX)/2,startY);
             	context.lineTo((startX+endX)/2,endY);
             } else {
-            	context.lineTo(startX,(startY+endY)/2);
+                tempParaArr.push({
+                    startPoint:{x:startX,y:startY},
+                    endPoint:{x:startX,y:(startY+endY)/2}
+                })
+                tempParaArr.push({
+                    startPoint:{x:startX,y:(startY+endY)/2},
+                    endPoint:{x:endX,y:(startY+endY)/2}
+                })
+                tempParaArr.push({
+                    startPoint:{x:endX,y:(startY+endY)/2},
+                    endPoint:{x:endX,y:endY}
+                })
+                var isOcupied = checkIsOcpied(tempParaArr);
+                console.log(isOcupied)
+                lineParaArr = lineParaArr.concat(tempParaArr);
+
+                if(isOcupied){
+                    if(strokeColor == "#AAAAAA"){
+                        strokeColor = "#666666"
+                    } else {
+                        strokeColor = "#FF0000"
+                    }
+                }
+                context.strokeStyle  = strokeColor;
+                context.beginPath();
+                context.moveTo(startX,startY);
+                context.lineTo(startX,(startY+endY)/2);
             	context.lineTo(endX,(startY+endY)/2);
             }
             context.lineTo(endX,endY);
             context.stroke();
             context.closePath();
             context.restore();
+			
+			console.log(lineParaArr);
             
             drawTriangle(startX,startY,endX,endY,arrow);
             if(lineInfo.length > 0){
