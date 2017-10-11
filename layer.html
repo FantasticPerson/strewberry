@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body{
+            margin: 0;
+            padding: 0;
+        }
+        .container{
+            width: 100%;
+            margin: 0 auto 0 auto;
+            /* background-color: #123; */
+            /* height: 100px; */
+        }
+
+        .node_name_container{
+            /* width: 100%; */
+            height: 25px;
+            padding: 10px 30px 10px 30px;
+            background-color: #aaa;
+        }
+
+        .node_name{
+            font-size: 20px;
+            color: #FFF;
+            line-height: 25px;
+        }
+
+        .fl{
+            float: left;
+        }
+        .fr{
+            float: right;
+        }
+        .detail_container{
+            width: 435px;
+            margin: 10px auto 0 auto;
+            height: 50px;
+            border-bottom:1px solid #ccc;
+
+
+        }
+        .arrow-container{
+            margin: auto;
+            background-image: url('./imgs/arrow_r.png');
+        }
+
+        .arrow-node{
+            margin: auto;
+        }
+        .line{
+            width: 200px;
+            height: 2px;
+            background-color: #ccc;
+            margin-top: 10px;
+        }
+
+        .detail_container img{
+            width: 15px;
+            height: 10px;
+            display: block;
+            position: absolute;
+            margin-top: 45px;
+            margin-left: 424px;
+        }
+
+        .content-container{
+            width: 100%;
+        }
+        .to_node{
+            text-align: right;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- <div class="node_name_container">
+            <div class="node_name_container">拟稿</div>
+            <div class="node_name fr">核稿</div>
+        </div>
+        <div class="content-container"></div> -->
+        <!-- <div class="detail_container">
+            <div class="from_node fl">
+                <div class="node_detail_name">金桂兰</div>
+                <div class="node_detail_time">10:11</div>
+            </div>
+            <div class="to_node fr">
+                    <div class="node_detail_name">蔡亚军</div>
+                    <div class="node_detail_time">12:30</div>
+            </div>
+            <img src='./imgs/triangle_right_gray.png'>
+        </div> -->
+    </div>
+    <script>
+        var href = window.location.href;
+        var args = href.split('?')[1].split('&');
+        var arg1 = decodeURI(args[0].split('=')[1]);
+        var arg2 =decodeURI(args[1].split('=')[1]);
+        var arg3 = args[2].split('=')[1];
+        console.log(arg1,arg2,arg3);
+        var arr = [{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""},
+        {"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""},
+        {"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""},
+        {"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""},
+        {"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""},
+        {"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"蔡亚军","time2":"2017-08-17 15:16:24"},{"name1":"王力飞","time1":"2017-08-17 14:30:00","name2":"朱春琴","time2":""}];
+        var html = '<div class="node_name_container"><div class="node_name fl">';
+        html+=arg1;
+        html+='</div><div class="node_name fr">';
+        html+=arg2+'</div></div><div class="content-container">'
+        for(var i=0;i<arr.length;i++){
+            var item = arr[i];
+            var itemHtml = '<div class="detail_container"><div class="from_node fl"><div class="node_detail_name">';
+            itemHtml+=item.name1;
+            itemHtml+='</div><div class="node_detail_time">';
+            itemHtml+=item.time1;
+            itemHtml+='</div></div><div class="to_node fr"><div class="node_detail_name">';
+            itemHtml+=item.name2;
+            itemHtml+='</div><div class="node_detail_time">';
+            itemHtml+=item.time2;
+            itemHtml+='</div></div><img src="./imgs/triangle_right_gray.png"></div>'
+            console.log(itemHtml);
+            html += itemHtml;
+        }
+        html+='</div>'
+        document.getElementsByClassName('container')[0].innerHTML = html;
+        // console.log(window.location.href);
+
+
+        
+    </script>
+</body>
+</html>
